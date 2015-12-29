@@ -33,7 +33,7 @@ import json
 class ProfileOP(object):
     def __init__(self, config):
         if "service_account" in config:
-            self.service_account = config["service_account "]
+            self.service_account = config["service_account"]
         else:
             self.service_account = service_account
         self.account = config["account"]
