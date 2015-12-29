@@ -27,10 +27,10 @@
 
 from bts.http_rpc import HTTPRPC
 from btsbots.config import service_account
-import json
+from btsbots.config import peg_asset_list
 
 
-class ProfileOP(object):
+class Recharge(object):
     def __init__(self, config):
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
@@ -49,8 +49,16 @@ class ProfileOP(object):
             print("[failed] transfer: %s" % trx)
             return
 
-    def update_profile(self, _profile):
-        profile = json.dumps({"profile": _profile})
+    def pay(self, pay_info):
+        _amount, _asset = pay_info
+        if not _asset:
+            print("please input balance like: 1 USD")
+            return
+        _asset = _asset.upper()
+        _allow_asset = peg_asset_list + ["BTS"]
+        if _asset not in _allow_asset:
+            print("please recharge with these asset:", _allow_asset)
+            return
         trx = [
-            self.account, service_account, 1, "BTS", profile]
+            self.account, service_account, _amount, _asset, "recharge"]
         self.wallet_transfer(trx)

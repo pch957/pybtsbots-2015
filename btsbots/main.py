@@ -45,8 +45,10 @@ URL: <{url}>
         help='profile file for btsbots')
     arg_parser.add_argument(
         'command',
-        choices=['run_trade', 'update_profile'], nargs='?',
+        choices=['run_trade', 'update_profile', 'recharge'], nargs='?',
         help='the command to run')
+    arg_parser.add_argument(
+        'sub_args', nargs='*', help='sub args for the command')
     arg_parser.add_argument(
         '-V', '--version',
         action='version',
@@ -63,12 +65,17 @@ URL: <{url}>
         pass
     elif args.command == "update_profile":
         profile_info = {}
-        if (args.profile):
-            profile_info = json.load(args.profile)
-
+        if not args.profile:
+            print("can't load profile")
+            return -1
+        profile_info = json.load(args.profile)
         from btsbots.profile_op import ProfileOP
         profile_op = ProfileOP(config_info)
         profile_op.update_profile(profile_info)
+    elif args.command == "recharge":
+        from btsbots.recharge import Recharge
+        _recharge = Recharge(config_info)
+        _recharge.pay(args.sub_args)
     else:
         print(epilog)
 
