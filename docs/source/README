@@ -1,0 +1,5 @@
+Run `sphinx-apidoc -o . ../../bts' in this directory.
+
+This will generate `modules.rst' and `bts.rst'.
+
+Then include `modules.rst' in your `index.rst' file.

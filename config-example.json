@@ -1,0 +1,18 @@
+{
+    "account": "init0",
+    "cli_wallet": {
+        "host" : "localhost",
+        "port" : 8092,
+        "rpc_user" : "",
+        "rpc_passwd" : "",
+        "wallet_unlock" : ""
+    },
+    "addition_spread": 0.005,
+    "threshold": 0.01,
+    "rate": {
+        "BOTSCNY": [0.999, "TCNY"],
+        "TRADE.BTC": [0.999, "BTC"],
+        "METAEX.BTC": [0.999, "BTC"],
+        "OPENBTC": [0.999, "BTC"]
+    }
+}

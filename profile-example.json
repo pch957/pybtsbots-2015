@@ -1,0 +1,30 @@
+{
+    "quota_in_usd": 100,
+    "market": [
+        ["BTS", "TCNY"],
+        ["BTS", "CNY"],
+        ["BTS", "USD"]
+        ],
+    "asset": {
+        "BTS": {
+            "weight": 5.0,
+            "spread": 0.007
+        },
+        "BOTSCNY": {
+            "weight": 1.0,
+            "spread": 0.003
+        },
+        "TRADE.BTC": {
+            "weight": 1.0,
+            "spread": 0.007
+        },
+        "METAEX.BTC": {
+            "weight": 1.0,
+            "spread": 0.007
+        },
+        "OPENBTC": {
+            "weight": 1.0,
+            "spread": 0.007
+        }
+    }
+}
