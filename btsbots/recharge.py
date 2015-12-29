@@ -28,10 +28,15 @@
 from bts.http_rpc import HTTPRPC
 from btsbots.config import service_account
 from btsbots.config import peg_asset_list
+import json
 
 
 class Recharge(object):
     def __init__(self, config):
+        if "service_account" in config:
+            self.service_account = config["service_account "]
+        else:
+            self.service_account = service_account
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
@@ -59,6 +64,7 @@ class Recharge(object):
         if _asset not in _allow_asset:
             print("please recharge with these asset:", _allow_asset)
             return
+        memo = json.dumps({"recharge": [_amount, _asset]})
         trx = [
-            self.account, service_account, _amount, _asset, "recharge"]
+            self.account, self.service_account, _amount, _asset, memo]
         self.wallet_transfer(trx)

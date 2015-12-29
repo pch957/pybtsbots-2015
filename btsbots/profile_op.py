@@ -32,6 +32,10 @@ import json
 
 class ProfileOP(object):
     def __init__(self, config):
+        if "service_account" in config:
+            self.service_account = config["service_account "]
+        else:
+            self.service_account = service_account
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
@@ -52,5 +56,5 @@ class ProfileOP(object):
     def update_profile(self, _profile):
         profile = json.dumps({"profile": _profile})
         trx = [
-            self.account, service_account, 1, "BTS", profile]
+            self.account, self.service_account, 1, "BTS", profile]
         self.wallet_transfer(trx)
