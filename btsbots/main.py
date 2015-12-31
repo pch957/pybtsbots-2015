@@ -61,6 +61,10 @@ URL: <{url}>
         config_info = json.load(args.config)
 
     if args.command == "run_trade":
+        from btsbots.tradebots import TradeBots
+        trade_bots = TradeBots(config_info)
+        trade_bots.run()
+
         print("wait ....")
         pass
     elif args.command == "update_profile":

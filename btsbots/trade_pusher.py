@@ -28,48 +28,83 @@
 import asyncio
 from btspusher import Pusher
 from btsbots.config import pusher_prefix
-from pprint import pprint
 
 
 class TradePusher(object):
-    def __init__(self, account_id):
+    def __init__(self, account_id, data=None):
         self.account_id = account_id
+        if data:
+            self.data = data
+        else:
+            self.data = {"tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}}
+        self.cb_update_order = None
+        self.cb_cancel_order = None
+
+    def init_pusher(self, loop):
+        self.future_pusher = asyncio.Future()
+        self.pusher = Pusher(loop, co=self.__init_pusher)
+        loop.run_until_complete(
+            asyncio.wait_for(self.future_pusher, 999))
 
     def onBill(self, *args, **kwargs):
-        print("bill info:")
-        print(args, kwargs)
+        billinfo = args[0]
+        if billinfo["balance"] < 1.0:
+            if self.cb_cancel_order:
+                self.cb_cancel_order()
+            print("no balance, please recharge")
+        else:
+            print("bill info:", billinfo)
 
     def onProfile(self, *args, **kwargs):
         print("update profile:")
         print(args, kwargs)
 
     def onTradeInfo(self, *args, **kwargs):
-        print("trade info:")
-        print(args, kwargs)
+        self.data["tradeinfo"] = args[0]
+        self.data["watchdog"][0] = kwargs["_time"]
+        print("got a trade info at time: ", kwargs["_time"])
+        if self.cb_update_order:
+            self.cb_update_order()
 
     def onPrice(self, *args, **kwargs):
-        # print(args, kwargs)
-        pass
+        self.data["rate_usd"] = args[0]
+        self.data["watchdog"][1] = kwargs["_time"]
+        print("got a rate event at time: ", kwargs["_time"])
+        if self.cb_update_order:
+            self.cb_update_order()
 
     @asyncio.coroutine
-    def _subscribe(self):
+    def __init_pusher(self, pusher):
         topic_prefix = "%s.account.%s" % (pusher_prefix, self.account_id)
-        yield from self.pusher.subscribe(self.onBill, "%s.bill" % topic_prefix)
-        yield from self.pusher.subscribe(
+        yield from pusher.subscribe(self.onBill, "%s.bill" % topic_prefix)
+        yield from pusher.subscribe(
             self.onProfile, "%s.profile" % topic_prefix)
-        yield from self.pusher.subscribe(
+        yield from pusher.subscribe(
             self.onTradeInfo, "%s.tradeinfo" % topic_prefix)
         topic = "%s.price" % (pusher_prefix)
-        yield from self.pusher.subscribe(self.onPrice, topic)
+        yield from pusher.subscribe(self.onPrice, topic)
+        yield from self.__init_data(pusher)
+        self.future_pusher.set_result(1)
 
-    def run(self, loop):
-        self.pusher = Pusher(loop)
-        loop.run_until_complete(self._subscribe())
+    @asyncio.coroutine
+    def __init_data(self, pusher):
+        topic_prefix = "%s.account.%s" % (pusher_prefix, self.account_id)
+        topic = "%s.bill" % topic_prefix
+        _ret = yield from pusher.call("pusher.get_last", topic)
+        if _ret:
+            self.onBill(*_ret["args"], **_ret["kwargs"])
+        topic = "%s.price" % (pusher_prefix)
+        _ret = yield from pusher.call("pusher.get_last", topic)
+        if _ret:
+            self.onPrice(*_ret["args"], **_ret["kwargs"])
+        topic = "%s.tradeinfo" % topic_prefix
+        _ret = yield from pusher.call("pusher.get_last", topic)
+        if _ret:
+            self.onTradeInfo(*_ret["args"], **_ret["kwargs"])
 
 if __name__ == '__main__':
-    import sys
     loop = asyncio.get_event_loop()
-    trade_pusher = TradePusher(sys.argv[1])
-    trade_pusher.run(loop)
+    trade_pusher = TradePusher("1.2.33015")
+    trade_pusher.init_pusher(loop)
     loop.run_forever()
     loop.close()

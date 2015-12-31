@@ -1,5 +1,5 @@
 {
-    "quota_in_usd": 200,
+    "quota_in_usd": 100,
     "market": [
         ["BTS", "TCNY"],
         ["BTS", "USD"]
