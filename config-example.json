@@ -9,10 +9,8 @@
     },
     "addition_spread": 0.005,
     "threshold": 0.01,
-    "rate": {
-        "BOTSCNY": [0.999, "TCNY"],
-        "TRADE.BTC": [0.999, "BTC"],
-        "METAEX.BTC": [0.999, "BTC"],
-        "OPENBTC": [0.999, "BTC"]
+    "price_factor": {
+        "CNY": 1.0,
+        "USD": 1.05
     }
 }

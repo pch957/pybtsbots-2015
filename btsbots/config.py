@@ -7,4 +7,4 @@ peg_asset_list = [
     "EUR", "USD", "TCNY"]
 
 pusher_prefix = "btsbots.trade"
-service_account = "abc.btsbots"
+service_account = "pay.btsbots"

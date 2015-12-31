@@ -1,30 +1,21 @@
 {
-    "quota_in_usd": 100,
+    "quota_in_usd": 200,
     "market": [
         ["BTS", "TCNY"],
-        ["BTS", "CNY"],
         ["BTS", "USD"]
         ],
     "asset": {
         "BTS": {
-            "weight": 5.0,
-            "spread": 0.007
+            "weight": 3.0,
+            "spread": [0.007, 0.12]
         },
-        "BOTSCNY": {
+        "TCNY": {
             "weight": 1.0,
-            "spread": 0.003
+            "spread": [0.005, 0.08]
         },
-        "TRADE.BTC": {
+        "USD": {
             "weight": 1.0,
-            "spread": 0.007
-        },
-        "METAEX.BTC": {
-            "weight": 1.0,
-            "spread": 0.007
-        },
-        "OPENBTC": {
-            "weight": 1.0,
-            "spread": 0.007
+            "spread": [0.005, 0.1]
         }
     }
 }

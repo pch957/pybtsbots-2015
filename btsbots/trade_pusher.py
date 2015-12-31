@@ -36,17 +36,20 @@ class TradePusher(object):
         self.account_id = account_id
 
     def onBill(self, *args, **kwargs):
+        print("bill info:")
         print(args, kwargs)
 
     def onProfile(self, *args, **kwargs):
         print("update profile:")
-        pprint(args[0])
+        print(args, kwargs)
 
     def onTradeInfo(self, *args, **kwargs):
+        print("trade info:")
         print(args, kwargs)
 
     def onPrice(self, *args, **kwargs):
-        print(args, kwargs)
+        # print(args, kwargs)
+        pass
 
     @asyncio.coroutine
     def _subscribe(self):
@@ -55,7 +58,7 @@ class TradePusher(object):
         yield from self.pusher.subscribe(
             self.onProfile, "%s.profile" % topic_prefix)
         yield from self.pusher.subscribe(
-            self.onTradeInfo, "%s.trade_info" % topic_prefix)
+            self.onTradeInfo, "%s.tradeinfo" % topic_prefix)
         topic = "%s.price" % (pusher_prefix)
         yield from self.pusher.subscribe(self.onPrice, topic)
 
