@@ -253,7 +253,7 @@ setup_dict = dict(
     ],
     packages=find_packages(exclude=(TESTS_DIRECTORY,)),
     install_requires=[
-        "bts"
+        "bts", "btsprice", "btspusher"
         # your module dependencies
     ] + python_version_specific_requires,
     # Allow tests to be run with `python setup.py test'.
