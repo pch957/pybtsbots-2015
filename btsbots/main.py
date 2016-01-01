@@ -45,7 +45,7 @@ URL: <{url}>
         help='profile file for btsbots')
     arg_parser.add_argument(
         'command',
-        choices=['run_trade', 'update_profile', 'recharge'], nargs='?',
+        choices=['run_trade', 'sim', 'update_profile', 'recharge'], nargs='?',
         help='the command to run')
     arg_parser.add_argument(
         'sub_args', nargs='*', help='sub args for the command')
@@ -64,9 +64,11 @@ URL: <{url}>
         from btsbots.tradebots import TradeBots
         trade_bots = TradeBots(config_info)
         trade_bots.run()
-
-        print("wait ....")
-        pass
+    elif args.command == "sim":
+        from btsbots.tradebots import TradeBots
+        trade_bots = TradeBots(config_info)
+        trade_bots.isSim = True
+        trade_bots.run()
     elif args.command == "update_profile":
         profile_info = {}
         if not args.profile:

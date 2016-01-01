@@ -8,7 +8,7 @@ Information describing the project.
 package = 'btsbots'
 project = "btsbots"
 project_no_spaces = project.replace(' ', '')
-version = '0.0.4'
+version = '0.0.5'
 description = 'trade bots for Bitshares'
 authors = ['Alt']
 authors_string = ', '.join(authors)

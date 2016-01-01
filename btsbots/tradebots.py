@@ -36,6 +36,7 @@ import math
 
 class TradeBots(object):
     def __init__(self, config):
+        self.isSim = False
         self.data = {"tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}}
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
@@ -158,14 +159,77 @@ class TradeBots(object):
                 _ops.extend(_ops_base)
         return _ops
 
+    def _sim_trade(self, base, quote, _tradeinfo):
+        print("============sim sell %s for %s============" % (base, quote))
+        _factor1, _price1 = self._sim_trade_sell(base, _tradeinfo)
+        _factor2, _price2 = self._sim_trade_buy(quote, _tradeinfo)
+        _spread = _factor1 / _factor2 - 1.0
+        _price = _price1/_price2
+        print("so the final spread sell %s for %s is %.4f, price is %.4f" % (
+            base, quote, _spread, _price))
+        print()
+
+    def _sim_trade_sell(self, asset, _tradeinfo):
+        alias = _tradeinfo[asset]["alias"]
+        _price, _spread1, _spread2 = self.data["rate_usd"][alias]
+        _spread3 = self.custom["addition_spread"]
+        _factor_weight = _tradeinfo[asset]["trade_factor"][1]
+        _factor_custom = 1.0
+
+        print("got %s's price is %.3f USD, with spread for sell: %.4f" % (
+            asset, _price, _spread2))
+        print("factor depend on weight is %.4f " % _factor_weight)
+        print("custom adition spread is %.4f" % _spread3)
+        if asset in self.custom["price_factor"]:
+            _factor_custom = self.custom["price_factor"][asset]
+            print("custom price factor is %.3f" % _factor_custom)
+        _final_factor = (1+_spread2)*(1+_spread3)*_factor_weight
+        _final_price = _price*_final_factor*_factor_custom
+        print("so the final factor for sell %s is %.4f, price is %.4f" % (
+            asset, _final_factor, _final_price))
+        print()
+        return _final_factor, _final_price
+
+    def _sim_trade_buy(self, asset, _tradeinfo):
+        alias = _tradeinfo[asset]["alias"]
+        _price, _spread1, _spread2 = self.data["rate_usd"][alias]
+        _spread3 = self.custom["addition_spread"]
+        _factor_weight = _tradeinfo[asset]["trade_factor"][1]
+        _factor_custom = 1.0
+
+        print("got %s's price is %.3f USD, with spread for buy: %.4f" % (
+            asset, _price, _spread1))
+        print("factor depend on weight is %.4f " % _factor_weight)
+        print("custom adition spread is %.4f" % _spread3)
+        if asset in self.custom["price_factor"]:
+            _factor_custom = self.custom["price_factor"][asset]
+            print("custom price factor is %.3f" % _factor_custom)
+        _final_factor = (1+_spread1)*(1+_spread3)*_factor_weight
+        _final_factor = 1/_final_factor
+        _final_price = _price*_final_factor*_factor_custom
+        print("so the final factor for buy %s is %.4f, price is %.4f" % (
+            asset, _final_factor, _final_price))
+        print()
+        return _final_factor, _final_price
+
+    def sim_trade(self, _tradeinfo):
+        if not _tradeinfo or not self.data["rate_usd"]:
+            return {}
+        for base in _tradeinfo:
+            for quote in _tradeinfo[base]["sell_for"]:
+                self._sim_trade(base, quote, _tradeinfo)
+
     def check_order(self):
         _tradeinfo = self.data["tradeinfo"]
+        if self.isSim:
+            self.sim_trade(_tradeinfo)
+            return
         trade_price = self.get_trade_price(_tradeinfo)
         if not trade_price:
             return
         need_update, need_balance = self.check_price(trade_price, _tradeinfo)
         # print(need_update)
-        print(need_balance)
+        # print(need_balance)
         if not need_balance:
             return
         try:
