@@ -31,7 +31,7 @@ import time
 from btsbots.trade_pusher import TradePusher
 from btsbots.config import asset_info
 import math
-from pprint import pprint
+# from pprint import pprint
 
 
 class TradeBots(object):
@@ -75,7 +75,7 @@ class TradeBots(object):
             _factor_bid = _tradeinfo[base]["trade_factor"][0]/(
                 (1+_spread_bid)*(1+self.custom["addition_spread"]))
             _factor_ask = _tradeinfo[base]["trade_factor"][1]*(
-                (1+_spread_bid)*(1+self.custom["addition_spread"]))
+                (1+_spread_ask)*(1+self.custom["addition_spread"]))
             if base in self.custom["price_factor"]:
                 _price *= self.custom["price_factor"][base]
             trade_price[base] = [_price, _factor_bid, _factor_ask]
@@ -214,7 +214,7 @@ class TradeBots(object):
             self.rpc.add_operation_to_builder_transaction(handle, _op)
         self.rpc.set_fees_on_builder_transaction(handle, "1.3.0")
         # pprint(self.rpc.sign_builder_transaction(handle, False))
-        pprint(self.rpc.sign_builder_transaction(handle, True))
+        self.rpc.sign_builder_transaction(handle, True)
         if wallet_was_unlocked:
             self.rpc.lock()
 
