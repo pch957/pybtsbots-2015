@@ -36,8 +36,10 @@ import math
 
 class TradeBots(object):
     def __init__(self, config):
+        self.cycle = 15  # run bots every 60 seconds
         self.isSim = False
-        self.data = {"tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}}
+        self.data = {
+            "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}, "bill": 0.0}
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
@@ -50,21 +52,29 @@ class TradeBots(object):
         self.custom["price_factor"] = config["price_factor"]
         self.account_id = self.rpc.get_account(config["account"])["id"]
         self.trade_pusher = TradePusher(self.account_id, self.data)
-        self.trade_pusher.cb_update_order = self.check_order
-        self.trade_pusher.cb_cancel_order = self.cancel_order
+
+    def timeout(self, timer, _timeout):
+        for timestamp in self.data["watchdog"]:
+            if timer - timestamp > _timeout:
+                print("timeout, cancel all orders")
+                return True
+        return False
 
     @asyncio.coroutine
-    def watchdog(self):
-        timeout = 60*30
-        cycle = timeout/10
+    def task_bots(self):
+        _timeout = 60*30
         while True:
-            _timer = time.time()
-            for timestamp in self.data["watchdog"]:
-                if _timer - timestamp > timeout:
-                    print("timeout, cancel all orders")
-                    # todo
-                    break
-            yield from asyncio.sleep(cycle)
+            try:
+                _timer = time.time()
+                if self.timeout(_timer, _timeout):
+                    self.cancel_order()
+                elif self.data["bill"] < 0.0:
+                    self.cancel_order()
+                else:
+                    self.check_order()
+            except Exception as e:
+                print("task bots error:", e)
+            yield from asyncio.sleep(self.cycle)
 
     def get_trade_price(self, _tradeinfo):
         if not _tradeinfo or not self.data["rate_usd"]:
@@ -176,7 +186,7 @@ class TradeBots(object):
         _factor_weight = _tradeinfo[asset]["trade_factor"][1]
         _factor_custom = 1.0
 
-        print("got %s's price is %.3f USD, with spread for sell: %.4f" % (
+        print("got %s's price is %.5f USD, with spread for sell: %.4f" % (
             asset, _price, _spread2))
         print("factor depend on weight is %.4f " % _factor_weight)
         print("custom adition spread is %.4f" % _spread3)
@@ -197,7 +207,7 @@ class TradeBots(object):
         _factor_weight = _tradeinfo[asset]["trade_factor"][0]
         _factor_custom = 1.0
 
-        print("got %s's price is %.3f USD, with spread for buy: %.4f" % (
+        print("got %s's price is %.5f USD, with spread for buy: %.4f" % (
             asset, _price, _spread1))
         print("factor depend on weight is %.4f " % _factor_weight)
         print("custom adition spread is %.4f" % _spread3)
@@ -286,6 +296,6 @@ class TradeBots(object):
     def run(self):
         loop = asyncio.get_event_loop()
         self.trade_pusher.init_pusher(loop)
-        loop.create_task(self.watchdog())
+        loop.create_task(self.task_bots())
         loop.run_forever()
         loop.close()

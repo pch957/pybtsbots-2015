@@ -37,8 +37,6 @@ class TradePusher(object):
             self.data = data
         else:
             self.data = {"tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}}
-        self.cb_update_order = None
-        self.cb_cancel_order = None
 
     def init_pusher(self, loop):
         self.future_pusher = asyncio.Future()
@@ -49,11 +47,10 @@ class TradePusher(object):
     def onBill(self, *args, **kwargs):
         billinfo = args[0]
         if billinfo["balance"] < 1.0:
-            if self.cb_cancel_order:
-                self.cb_cancel_order()
             print("no balance, please recharge")
         else:
             print("bill info:", billinfo)
+        self.data["bill"] = billinfo["balance"]
 
     def onProfile(self, *args, **kwargs):
         print("update profile:")
@@ -63,15 +60,11 @@ class TradePusher(object):
         self.data["tradeinfo"] = args[0]
         self.data["watchdog"][0] = kwargs["_time"]
         print("got a trade info at time: ", kwargs["_time"])
-        if self.cb_update_order:
-            self.cb_update_order()
 
     def onPrice(self, *args, **kwargs):
         self.data["rate_usd"] = args[0]
         self.data["watchdog"][1] = kwargs["_time"]
         print("got a rate event at time: ", kwargs["_time"])
-        if self.cb_update_order:
-            self.cb_update_order()
 
     @asyncio.coroutine
     def __init_pusher(self, pusher):
