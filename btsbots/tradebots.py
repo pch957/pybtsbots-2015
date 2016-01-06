@@ -165,7 +165,7 @@ class TradeBots(object):
         _factor2, _price2 = self._sim_trade_buy(quote, _tradeinfo)
         _spread = _factor1 / _factor2 - 1.0
         _price = _price1/_price2
-        print("so the final spread sell %s for %s is %.4f, price is %.4f" % (
+        print("so the final spread sell %s for %s is %.4f, price is %.8f" % (
             base, quote, _spread, _price))
         print()
 
@@ -194,7 +194,7 @@ class TradeBots(object):
         alias = _tradeinfo[asset]["alias"]
         _price, _spread1, _spread2 = self.data["rate_usd"][alias]
         _spread3 = self.custom["addition_spread"]
-        _factor_weight = _tradeinfo[asset]["trade_factor"][1]
+        _factor_weight = _tradeinfo[asset]["trade_factor"][0]
         _factor_custom = 1.0
 
         print("got %s's price is %.3f USD, with spread for buy: %.4f" % (
@@ -204,8 +204,7 @@ class TradeBots(object):
         if asset in self.custom["price_factor"]:
             _factor_custom = self.custom["price_factor"][asset]
             print("custom price factor is %.3f" % _factor_custom)
-        _final_factor = (1+_spread1)*(1+_spread3)*_factor_weight
-        _final_factor = 1/_final_factor
+        _final_factor = _factor_weight/((1+_spread1)*(1+_spread3))
         _final_price = _price*_final_factor*_factor_custom
         print("so the final factor for buy %s is %.4f, price is %.4f" % (
             asset, _final_factor, _final_price))
@@ -267,6 +266,8 @@ class TradeBots(object):
 
     def build_transaction(self, _ops):
         if not _ops:
+            return
+        if self.isSim:
             return
         wallet_was_unlocked = False
 
