@@ -109,7 +109,7 @@ class TradeBots(object):
             _price_now, _amount = _tradeinfo[base][
                 "sell_for"][quote]["orders"][order_id]
             _need_balance[base][0] += _amount
-            if _amount / _quota < 0.5:
+            if _amount < _quota*0.5 or _amount > _quota*2.0:
                 _need_update[(base, quote)] = _fa
                 _need_balance[base][1] += _quota
                 return
