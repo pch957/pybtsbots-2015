@@ -31,6 +31,7 @@ import time
 from btsbots.trade_pusher import TradePusher
 from btsbots.config import asset_info
 import math
+from prettytable import PrettyTable
 # from pprint import pprint
 
 
@@ -39,7 +40,8 @@ class TradeBots(object):
         self.cycle = 15  # run bots every 60 seconds
         self.isSim = False
         self.data = {
-            "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}, "bill": 0.0}
+            "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {},
+            "bill": 0.0, "profile": {}}
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
@@ -52,6 +54,7 @@ class TradeBots(object):
         self.custom["price_factor"] = config["price_factor"]
         self.account_id = self.rpc.get_account(config["account"])["id"]
         self.trade_pusher = TradePusher(self.account_id, self.data)
+        self.last_table = ""
 
     def timeout(self, timer, _timeout):
         for timestamp in self.data["watchdog"]:
@@ -74,6 +77,7 @@ class TradeBots(object):
                     self.check_order()
             except Exception as e:
                 print("task bots error:", e)
+            self.display_order()
             yield from asyncio.sleep(self.cycle)
 
     def get_trade_price(self, _tradeinfo):
@@ -135,8 +139,6 @@ class TradeBots(object):
                 self._check_price(
                     trade_price, _tradeinfo, _market_price,
                     _need_update, _need_balance, base, quote)
-            if not _need_balance[base][1]:
-                del(_need_balance[base])
         for _market in _need_update:
             _need_update[_market] = _market_price[_market]
         return _need_update, _need_balance
@@ -145,7 +147,7 @@ class TradeBots(object):
         _ops = []
         if base == "BTS":
             need_balance[0] -= 5.0 / self.data["rate_usd"]["BTS"][0]
-        if need_balance[1] >= need_balance[0]:
+        if need_balance[1] > need_balance[0]:
             scale = need_balance[0]/need_balance[1]
         else:
             scale = 1.0
@@ -155,6 +157,8 @@ class TradeBots(object):
             for _id in _tradeinfo[base]["sell_for"][quote]["orders"]:
                 _ops.append(self.build_cancel_order(_id))
             amount = scale*_tradeinfo[base]["sell_for"][quote]["quota"]
+            if amount <= 0.0:
+                continue
             price = need_update[(base, quote)]
             print(base, quote, price, amount)
             _ops.append(self.build_sell_order(base, quote, price, amount))
@@ -228,6 +232,49 @@ class TradeBots(object):
             for quote in _tradeinfo[base]["sell_for"]:
                 self._sim_trade(base, quote, _tradeinfo)
 
+    def display_add_order(self, _t, _base, _quote):
+        _market = "%s/%s" % (_quote, _base)
+        _tradeinfo = self.data["tradeinfo"]
+        a_base = _tradeinfo[_base]["alias"]
+        a_quote = _tradeinfo[_quote]["alias"]
+        bid_volume = bid_spread = bid_price = None
+        ask_volume = ask_spread = ask_price = None
+        real_price = self.data["rate_usd"][a_base][0]/self.data[
+            "rate_usd"][a_quote][0]
+        if _tradeinfo[_quote]["sell_for"][_base]["orders"]:
+            _id = list(_tradeinfo[_quote]["sell_for"][_base]["orders"])[0]
+            _order = _tradeinfo[_quote]["sell_for"][_base]["orders"][_id]
+            bid_price, bid_volume = _order
+            bid_volume = bid_volume * bid_price
+            bid_price = 1/bid_price
+            bid_spread = real_price/bid_price - 1.0
+        if _tradeinfo[_base]["sell_for"][_quote]["orders"]:
+            _id = list(_tradeinfo[_base]["sell_for"][_quote]["orders"])[0]
+            _order = _tradeinfo[_base]["sell_for"][_quote]["orders"][_id]
+            ask_price, ask_volume = _order
+            ask_spread = ask_price/real_price - 1.0
+        _row = [
+            _market, bid_volume, bid_spread, bid_price,
+            real_price, ask_price, ask_spread, ask_volume]
+        for _index in range(1, len(_row)):
+            if _row[_index]:
+                _row[_index] = format(_row[_index], ".4g")
+        _t.add_row(_row)
+
+    def display_order(self):
+        t = PrettyTable([
+            "market", "bid volume", "bid spread", "bid price",
+            "real price", "ask price", "ask spread", "ask volume"])
+        t.align = 'r'
+        t.border = True
+        for _base, _quote in self.data["profile"]["market"]:
+            self.display_add_order(t, _base, _quote)
+        _table = t.get_string()
+        if _table == self.last_table:
+            return
+        self.last_table = _table
+        print(_table)
+
     def check_order(self):
         _tradeinfo = self.data["tradeinfo"]
         if self.isSim:
@@ -239,7 +286,7 @@ class TradeBots(object):
         need_update, need_balance = self.check_price(trade_price, _tradeinfo)
         # print(need_update)
         # print(need_balance)
-        if not need_balance:
+        if not need_update:
             return
         try:
             _ops = self.generate_order(_tradeinfo, need_update, need_balance)

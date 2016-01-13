@@ -36,7 +36,9 @@ class TradePusher(object):
         if data:
             self.data = data
         else:
-            self.data = {"tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {}}
+            self.data = {
+                "tradeinfo": {}, "watchdog": [0, 0], "rate_usd": {},
+                "profile": {}}
 
     def init_pusher(self, loop):
         self.future_pusher = asyncio.Future()
@@ -55,16 +57,17 @@ class TradePusher(object):
     def onProfile(self, *args, **kwargs):
         print("update profile:")
         print(args, kwargs)
+        self.data["profile"] = args[0]
 
     def onTradeInfo(self, *args, **kwargs):
         self.data["tradeinfo"] = args[0]
         self.data["watchdog"][0] = kwargs["_time"]
-        print("got a trade info at time: ", kwargs["_time"])
+        # print("got a trade info at time: ", kwargs["_time"])
 
     def onPrice(self, *args, **kwargs):
         self.data["rate_usd"] = args[0]
         self.data["watchdog"][1] = kwargs["_time"]
-        print("got a rate event at time: ", kwargs["_time"])
+        # print("got a rate event at time: ", kwargs["_time"])
 
     @asyncio.coroutine
     def __init_pusher(self, pusher):
@@ -94,6 +97,10 @@ class TradePusher(object):
         _ret = yield from pusher.call("pusher.get_last", topic)
         if _ret:
             self.onTradeInfo(*_ret["args"], **_ret["kwargs"])
+        topic = "%s.profile" % topic_prefix
+        _ret = yield from pusher.call("pusher.get_last", topic)
+        if _ret:
+            self.onProfile(*_ret["args"], **_ret["kwargs"])
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
