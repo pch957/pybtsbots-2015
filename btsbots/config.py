@@ -26,7 +26,7 @@ asset_info = {
     'METAEX.BTC': {'id': '1.3.592', 'precision': 8},
     'MXN': {'id': '1.3.114', 'precision': 4},
     'NZD': {'id': '1.3.112', 'precision': 4},
-    'OPENBTC': {'id': '1.3.569', 'precision': 8},
+    'OPEN.BTC': {'id': '1.3.861', 'precision': 8},
     'RUB': {'id': '1.3.110', 'precision': 4},
     'SEK': {'id': '1.3.111', 'precision': 4},
     'SGD': {'id': '1.3.108', 'precision': 4},
