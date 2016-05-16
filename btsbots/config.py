@@ -4,13 +4,14 @@ peg_asset_list = [
     "KRW", "BTC", "SILVER", "GOLD", "TRY",
     "SGD", "HKD", "RUB", "SEK", "NZD", "CNY",
     "MXN", "CAD", "CHF", "AUD", "GBP", "JPY",
-    "EUR", "USD", "TCNY", "TUSD"]
+    "EUR", "USD", "TCNY", "TUSD", "ARS"]
 
 pusher_prefix = "btsbots.trade"
 service_account = "pay.btsbots"
 
 asset_info = {
     'AUD': {'id': '1.3.117', 'precision': 4},
+    'ARS': {'id': '1.3.1017', 'precision': 4},
     'BOTSCNY': {'id': '1.3.338', 'precision': 4},
     'BTC': {'id': '1.3.103', 'precision': 8},
     'BTS': {'id': '1.3.0', 'precision': 5},
