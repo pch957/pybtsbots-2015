@@ -100,6 +100,12 @@ class TradeBots(object):
             self, trade_price, _tradeinfo,
             _market_price, _need_update, _need_balance, base, quote):
         _fa = trade_price[base][2]/trade_price[quote][1]
+        # remove spread for same asset
+        # if _tradeinfo[base]["alias"] == _tradeinfo[quote]["alias"]:
+        #     alias = _tradeinfo[base]["alias"]
+        #     _price, _spread_bid, _spread_ask = self.data["rate_usd"][alias]
+        #     _fa = _fa/((1+_spread_bid)*(1+_spread_ask))
+
         _price_real = trade_price[base][0]/trade_price[quote][0]
         _price_sell = _price_real * _fa
         _market_price[(base, quote)] = _price_sell
@@ -112,20 +118,22 @@ class TradeBots(object):
         for order_id in _tradeinfo[base]["sell_for"][quote]["orders"]:
             _price_now, _amount = _tradeinfo[base][
                 "sell_for"][quote]["orders"][order_id]
-            _need_balance[base][0] += _amount
             if _amount < _quota*0.5 or _amount > _quota*2.0:
                 _need_update[(base, quote)] = _fa
+                _need_balance[base][0] += _amount
                 _need_balance[base][1] += _quota
                 return
             _fa2 = _price_now / _price_real
             if math.fabs(_fa2/_fa-1) > self.custom["threshold"]:
                 _need_update[(base, quote)] = _fa
+                _need_balance[base][0] += _amount
                 _need_balance[base][1] += _quota
                 return
             if (quote, base) not in _need_update:
                 return
             if _fa2 * _need_update[(quote, base)] <= 1.001:
                 _need_update[(base, quote)] = _fa
+                _need_balance[base][0] += _amount
                 _need_balance[base][1] += _quota
                 return
 
@@ -148,9 +156,9 @@ class TradeBots(object):
         if base == "BTS":
             need_balance[0] -= 5.0 / self.data["rate_usd"]["BTS"][0]
         if need_balance[1] > need_balance[0]:
-            scale = need_balance[0]/need_balance[1]
+            scale = need_balance[0]/need_balance[1]*0.999999
         else:
-            scale = 1.0
+            scale = 0.999999
         for quote in _tradeinfo[base]["sell_for"]:
             if (base, quote) not in need_update:
                 continue
