@@ -153,6 +153,7 @@ class TradeBots(object):
 
     def _generate_order(self, base, _tradeinfo, need_update, need_balance):
         _ops = []
+        _ops_cancel = []
         if base == "BTS":
             need_balance[0] -= 5.0 / self.data["rate_usd"]["BTS"][0]
         if need_balance[1] > need_balance[0]:
@@ -163,23 +164,27 @@ class TradeBots(object):
             if (base, quote) not in need_update:
                 continue
             for _id in _tradeinfo[base]["sell_for"][quote]["orders"]:
-                _ops.append(self.build_cancel_order(_id))
+                _ops_cancel.append(self.build_cancel_order(_id))
             amount = scale*_tradeinfo[base]["sell_for"][quote]["quota"]
             if amount <= 0.0:
                 continue
             price = need_update[(base, quote)]
             print(base, quote, price, amount)
             _ops.append(self.build_sell_order(base, quote, price, amount))
-        return _ops
+        return _ops, _ops_cancel
 
     def generate_order(self, _tradeinfo, need_update, need_balance):
         _ops = []
+        _ops_cancel = []
         for base in need_balance:
-            _ops_base = self._generate_order(
+            _ops_base, _ops_base_cancel = self._generate_order(
                 base, _tradeinfo, need_update, need_balance[base])
             if _ops_base:
                 _ops.extend(_ops_base)
-        return _ops
+            if _ops_base_cancel:
+                _ops_cancel.extend(_ops_base_cancel)
+        _ops_cancel.extend(_ops)
+        return _ops_cancel
 
     def _sim_trade(self, base, quote, _tradeinfo):
         print("============sim sell %s for %s============" % (base, quote))
