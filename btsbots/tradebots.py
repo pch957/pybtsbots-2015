@@ -157,6 +157,8 @@ class TradeBots(object):
         _ops_cancel = []
         if base == "BTS":
             need_balance[0] -= 5.0 / self.data["rate_usd"]["BTS"][0]
+            if need_balance[0] < 0.0:
+                need_balance[0] = 0.0;
         if need_balance[1] > need_balance[0]:
             scale = need_balance[0]/need_balance[1]*0.999999
         else:
