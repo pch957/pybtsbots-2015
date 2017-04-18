@@ -39,9 +39,11 @@ class ProfileOP(object):
         self.account = config["account"]
         cli_wallet = config["cli_wallet"]
         self.password = cli_wallet["wallet_unlock"]
-        self.rpc = HTTPRPC(
-            cli_wallet["host"], cli_wallet["port"],
-            cli_wallet["rpc_user"], cli_wallet["rpc_passwd"])
+        if 'uri' in cli_wallet:
+            uri = cli_wallet["uri"]
+        else:
+            uri = "http://%s:%s" % (cli_wallet["host"], cli_wallet["port"])
+        self.rpc = HTTPRPC(uri)
 
     def wallet_transfer(self, trx):
         _from_account, _to_account, _amount, _asset, _memo = trx
